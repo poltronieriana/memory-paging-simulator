@@ -22,6 +22,8 @@ class Simulator:
         
         # Estrutura de dados pro FIFO
         self.fifo_queue = deque()
+
+        self.last_acess_was_fault = False
         
         # Funções de callback para a interface (vão ser injetadas)
         self.display_callback = None
@@ -69,36 +71,71 @@ class Simulator:
         Processa um acesso a uma página virtual.
         Deve verificar se a página está presente (hit) ou não (fault).
         """
-        # TODO: integrante 2 mexe aqui
-        
-        print(f"[Simulator Stub] Acessando página {page_number}. (Lógica de I2 pendente)")
-        
-        # Exemplo de lógica provisória mínima de falha (para testar a integração)
-        if not self.page_table.is_present(page_number):
-             self.page_faults += 1
-             self.handle_page_fault(page_number)
-        
-        pass # Pula pq por enquanto não tem implementação
+
+        # O estado de falha deve ser False por padrão para cada acesso
+        page_fault_occurred = False
+
+        # 1. verficação (hit ou fault)
+        if self.page_table.is_present(page_number):
+            # Página está na memória (hit)
+            print(f"Página {page_number} acessada com sucesso. (HIT)")
+
+        else:
+            # Página não está na memória (fault)
+            print(f"Página {page_number} não está na memória. (FAULT)")
+            self.page_faults += 1 # Incrementa contador de falhas
+            page_fault_occurred = True  
+
+            # Chama o tratamento de falha de página
+            self.handle_page_fault(page_number)
+
+            #  Retorna se houve falha, pra pra run() atualizar o estado
+            return page_fault_occurred
 
     def handle_page_fault(self, page_number):
         """
         Trata uma falha de página.
         Deve encontrar uma moldura livre ou aplicar o FIFO se a memória estiver cheia.
         """
-        # TODO: integrante 2 mexe aqui
-        
-        print(f"[Simulator Stub] Tratando Page Fault para {page_number}. (Lógica de I2 pendente)")
-        pass 
+        free_frame =-1
+        # tenta encontrar uma moldura livre
+        try:
+            # O PhysicalMemory.frames armazena a página (int) ou -1 (livre
+            free_frame = self.physical_memory.frames.index(-1)
+            print(f"Moldura livre encontrada: {free_frame}")
+
+        # se não tiver moldura libre, aplica o FIFO
+        except ValueError:
+            print("Memória cheia. Aplicando FIFO para substituição.")
+
+            # Remove a página mais antiga da fila FIFO
+            page_to_remove = self.fifo_queue.popleft()   
+
+            # Encontra a moldura da página a página antiga tava usando
+            frame_to_free = self.page_table.get_frame(page_to_remove)
+
+            # Atualiza a tabela de páginas e memória física
+            self.physical_memory.free_frame(frame_to_free)
+            self.page_table.remove_mapping(page_to_remove)
+
+            free_frame = frame_to_free
+
+        # Carrega a nova página na moldura livre
+        self.load_page(page_number, free_frame)
 
     def load_page(self, page_number, frame_number):
         """
         Função auxiliar para carregar uma página em uma moldura.
         Atualiza memória, tabela e fila.
         """
-        # TODO: integrante 2 mexe aqui
-        
-        print(f"[Simulator Stub] Carregando pág {page_number} na moldura {frame_number}. (Lógica de I2 pendente)")
-        pass # 
+        self.physical_memory.allocate_frame(frame_number, page_number)
+
+        self.page_table.set_mapping(page_number, frame_number)
+
+        # Adiciona a página carregada na fila FIFO
+        self.fifo_queue.append(page_number)
+
+        print(f"Página {page_number} carregada na moldura {frame_number}.")
 
     def translate_address(self, virtual_address):
         """
@@ -125,7 +162,7 @@ class Simulator:
             "physical_memory": self.physical_memory,
             "page_faults_count": self.page_faults,
             "last_accessed_page": last_page_accessed,
-            "page_fault_occurred": False # Integrante 2 deve atualizar isso em access_page
+            "page_fault_occurred": self.last_acess_was_fault
         }
 
     def get_final_report(self):
@@ -138,3 +175,4 @@ class Simulator:
             "final_page_table": str(self.page_table),
             "final_physical_memory": str(self.physical_memory)
         }
+    
