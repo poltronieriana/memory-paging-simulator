@@ -16,7 +16,9 @@ class PageTable:
         lista = []
         for i in range(num_pages):
             lista.append(TableEntry(i))
-            self.entries = lista
+        
+        
+        self.entries = lista
     
     def get_entry(self, page_number):
         """Returns the table entry for a specific page"""
@@ -52,8 +54,8 @@ class PageTable:
         if entry:
             return entry.frame_number
         else:
-            return -1      
-             
+            return -1       
+            
     def __str__(self):
         result = "Page Table:\n"
         result += "-" * 40 + "\n"
