@@ -55,7 +55,7 @@ class Simulator:
             # Processa o acesso à página
             self.access_page(page_number)
             
-            # Chama o callback da interface (I4) para mostrar o estado
+            # Chama o callback da interface para mostrar o estado
             if self.display_callback:
                 # Prepara os dados para a interface
                 state = self.get_simulation_state(page_number)
@@ -72,8 +72,7 @@ class Simulator:
         Deve verificar se a página está presente (hit) ou não (fault).
         """
 
-        # O estado de falha deve ser False por padrão para cada acesso
-        page_fault_occurred = False
+        self.last_acess_was_fault = False
 
         # 1. verficação (hit ou fault)
         if self.page_table.is_present(page_number):
@@ -84,13 +83,12 @@ class Simulator:
             # Página não está na memória (fault)
             print(f"Página {page_number} não está na memória. (FAULT)")
             self.page_faults += 1 # Incrementa contador de falhas
-            page_fault_occurred = True  
+            
+            self.last_acess_was_fault = True  
 
             # Chama o tratamento de falha de página
             self.handle_page_fault(page_number)
 
-            #  Retorna se houve falha, pra pra run() atualizar o estado
-            return page_fault_occurred
 
     def handle_page_fault(self, page_number):
         """
@@ -104,12 +102,12 @@ class Simulator:
             free_frame = self.physical_memory.frames.index(-1)
             print(f"Moldura livre encontrada: {free_frame}")
 
-        # se não tiver moldura libre, aplica o FIFO
+        # se não tiver moldura livre, aplica o FIFO
         except ValueError:
             print("Memória cheia. Aplicando FIFO para substituição.")
 
             # Remove a página mais antiga da fila FIFO
-            page_to_remove = self.fifo_queue.popleft()   
+            page_to_remove = self.fifo_queue.popleft()  
 
             # Encontra a moldura da página a página antiga tava usando
             frame_to_free = self.page_table.get_frame(page_to_remove)
@@ -127,6 +125,7 @@ class Simulator:
         """
         Função auxiliar para carregar uma página em uma moldura.
         Atualiza memória, tabela e fila.
+        (Implementação de I2)
         """
         self.physical_memory.allocate_frame(frame_number, page_number)
 
@@ -175,4 +174,3 @@ class Simulator:
             "final_page_table": str(self.page_table),
             "final_physical_memory": str(self.physical_memory)
         }
-    
