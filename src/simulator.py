@@ -1,5 +1,5 @@
 from collections import deque
-from .memory import PageTable, PhysicalMemory
+from memory import PageTable, PhysicalMemory
 
 class Simulator:
     """
@@ -139,10 +139,7 @@ class Simulator:
     def translate_address(self, virtual_address):
         """
         Converte um endereço virtual em um número de página.
-        
-        PROVISÓRIO: Assume que o endereço já é o número da página.
         """
-        # TODO: integrante 1 mexe aqui
         try:
             return int(virtual_address)
         except ValueError:
@@ -157,7 +154,7 @@ class Simulator:
             dict: Dicionário com o estado atual.
         """
         return {
-            "page_table": self.page_table,
+            "page_table": self.page_table.entries,
             "physical_memory": self.physical_memory,
             "page_faults_count": self.page_faults,
             "last_accessed_page": last_page_accessed,
@@ -167,10 +164,10 @@ class Simulator:
     def get_final_report(self):
         """
         Empacota o relatório final para a interface.
-        Esta é uma função de integração (I3).
+        Envia os dados brutos para a interface formatar.
         """
         return {
             "total_page_faults": self.page_faults,
-            "final_page_table": str(self.page_table),
-            "final_physical_memory": str(self.physical_memory)
+            "page_table_entries": self.page_table.entries,       
+            "physical_memory_frames": self.physical_memory.frames  
         }

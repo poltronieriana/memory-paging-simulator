@@ -1,6 +1,6 @@
 import sys
-from .simulator import Simulator
-from .interface import Interface
+from simulator import Simulator
+from interface import Interface
 
 def main():
     """
@@ -19,8 +19,10 @@ def main():
     # Verifica se o modo 'demo' foi solicitado
     if "demo" in sys.argv:
         ui.set_demo_mode(True)
+    else:
+        ui.set_demo_mode(False) # Se não for posto como verdadeiro, irá pergunta ao usuário.
 
-    # 2. Coleta as entradas (usa o stub de I1 em Interface)
+    # 2. Coleta as entradas
     num_frames, num_pages, access_list = ui.get_inputs()
     
     # 3. Instancia o Simulador 
